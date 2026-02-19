@@ -1,0 +1,29 @@
+variable timestep equal 0.0005
+variable tdamp equal 10*${timestep}
+variable pdamp equal 100*${timestep}
+variable force_sq atom "fx^2+fy^2+fz^2"
+units metal
+newton on
+dimension 3
+boundary p p p
+atom_style atomic
+atom_modify map yes
+neighbor 2.0 bin
+#neigh_modify one 9000 page 100000 delay 10 every 10 check yes
+thermo 10
+read_data ${cfgfile}
+mass 1 1.008
+timestep ${timestep}
+compute total_force_sq all reduce sum v_force_sq
+thermo_style custom step time temp pe ke etotal vol density lx ly lz xy xz yz press pxx pyy pzz pxy pxz pyz c_total_force_sq
+pair_style mliap unified /work/hdd/bcqo/isaitov/HYDROGEN/M29_elite_LLPT-07-29-2025.model-mliap_lammps.pt 0
+pair_coeff * * H
+dump 1 all custom 100 dump.init.atom id type x y z
+dump_modify 1 sort id
+velocity all create ${temp} 825577 dist gaussian
+velocity all zero linear
+velocity all zero angular
+fix 1 all npt temp ${temp} ${temp} ${tdamp} iso ${pressure} ${pressure} ${pdamp}
+run 10000
+unfix 1
+write_restart restart.0

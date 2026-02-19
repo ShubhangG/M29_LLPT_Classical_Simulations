@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Data and outputs (not tracked)
+*.traj
+*.dump
+*.atom
+restart.*
+lammps.out*
+*.log
+data_*.txt
+2000K_data.txt
+hydrogen_*_atom_*.txt
+
+# Model files (large binaries)
+*.pt
+*.model*

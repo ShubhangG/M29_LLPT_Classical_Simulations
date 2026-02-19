@@ -1,0 +1,16 @@
+variable timestep equal 0.0005
+variable tdamp equal 10*${timestep}
+variable pdamp equal 100*${timestep}
+variable force_sq atom "fx^2+fy^2+fz^2"
+units         metal
+atom_style    atomic
+atom_modify   map yes
+newton        on
+thermo 100
+read_data analysis/last_config_liquid.txt
+mass 1 1.008
+timestep      0.0005
+compute total_force_sq all reduce sum v_force_sq
+thermo_style custom step time temp pe ke etotal vol density lx ly lz xy xz yz press pxx pyy pzz pxy pxz pyz c_total_force_sq
+pair_style mliap unified /work/hdd/bcqo/isaitov/HYDROGEN/M29_elite_LLPT-07-29-2025.model-mliap_lammps.pt 0
+pair_coeff * * H

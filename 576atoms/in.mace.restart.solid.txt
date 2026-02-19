@@ -1,0 +1,20 @@
+variable timestep equal 0.0005
+variable tdamp equal 10*${timestep}
+variable pdamp equal 100*${timestep}
+read_restart restart.${read_restart_step}
+neigh_modify one 9000 page 100000 delay 10 every 10 check yes
+thermo 10
+newton on
+thermo_style custom step time temp pe ke etotal vol density lx ly lz xy xz yz press pxx pyy pzz pxy pxz pyz
+mass 1 1.008
+timestep ${timestep}
+pair_style mace no_domain_decomposition
+pair_coeff * * /work/hdd/bcqo/shubhanggoswami/LLPT_Scan/M29/calculator/M29_elite_rcut3.5_lam140_LLPT-07-29-2025_compiled.model-lammps.pt H
+dump 1 all custom 100 dump.${read_restart_step}.atom id type x y z
+dump_modify 1 sort id
+if "${temp} >= 2000" then &
+"fix 1 all npt temp ${temp} ${temp} ${tdamp} iso ${pressure} ${pressure} ${pdamp}" &
+else &
+"fix 1 all npt temp ${temp} ${temp} ${tdamp} x ${pressure} ${pressure} ${pdamp} y ${pressure} ${pressure} ${pdamp} z ${pressure} ${pressure} ${pdamp} xy 0 0 ${pdamp} yz 0 0 ${pdamp} xz 0 0 ${pdamp}"
+run 5000
+write_restart restart.*
