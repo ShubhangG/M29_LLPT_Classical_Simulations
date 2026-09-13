@@ -1,0 +1,40 @@
+# Two-phase interface close at ~0 K (frozen geometry).
+# After separate 1600 K equilibration of each phase, bring slabs together
+# with particles essentially frozen so neither melting nor freezing can occur
+# during contact. 0.5 ps = 1000 steps at dt=0.0005.
+# Restart production MD afterward at coexistence T (e.g. 1600 K) with new velocities.
+variable timestep equal 0.0005
+variable tdamp equal 10*${timestep}
+variable force_sq atom "fx^2+fy^2+fz^2"
+units metal
+newton on
+dimension 3
+boundary p p p
+atom_style atomic
+atom_modify map yes
+neighbor 2.0 bin
+neigh_modify one 3000 page 70000 delay 0 every 1 check yes
+thermo 10
+read_data ${cfgfile}
+mass 1 1.008
+timestep ${timestep}
+compute total_force_sq all reduce sum v_force_sq
+thermo_style custom step time temp pe ke etotal vol density lx ly lz xy xz yz press pxx pyy pzz pxy pxz pyz c_total_force_sq
+pair_style mliap unified /work/hdd/bcqo/isaitov/HYDROGEN/M29_elite_LLPT-07-29-2025.model-mliap_lammps.pt 0
+pair_coeff * * H
+dump 1 all custom 50 dump.twophase.relax.atom id type x y z
+dump_modify 1 sort id
+# Tiny thermal velocities; COM drift removed. At 1 K atoms barely move on 0.5 ps.
+velocity all create ${temp} 5566778 dist gaussian
+velocity all zero linear
+velocity all zero angular
+# Sanity: print PE/forces at step 0 before deform (healthy H PE ~ -45e3 for 3072)
+run 0
+fix 1 all nvt temp ${temp} ${temp} ${tdamp}
+# Close both slab gaps (slab=4 A -> deform_dz=-8). Remap atoms with the box.
+fix 2 all deform 1 z delta 0 ${deform_dz}
+run 1000
+unfix 1
+unfix 2
+write_data data.twophase.relaxed.txt
+write_restart restart.twophase.0
